@@ -2,7 +2,7 @@
 #include <jv.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <assert.h>
 
 #define DEFAULT_BUFFER_LENGTH 1024
 
@@ -29,26 +29,33 @@ void jq_compat_buf_reset(string_buffer *buf){
   buf->length = 0;
 }
 
-void jq_compat_buf_ensure_size(string_buffer *buf, size_t n){
+void jq_compat_buf_ensure_capacity(string_buffer *buf, size_t n){
   if(n > buf->capacity){
+    fflush(stdout);
     buf->buffer = realloc(buf->buffer, n);
+    buf->capacity = n;
   }
 }
 
 void jq_compat_buf_ensure_extra_capacity(string_buffer *buf, size_t extra){
-  jq_compat_buf_ensure_size(buf, extra + buf->length);
+  jq_compat_buf_ensure_capacity(buf, extra + buf->length);
+}
+
+void jq_compat_buf_terminate(string_buffer *buf){
+  jq_compat_buf_ensure_extra_capacity(buf, 1);
+  buf->buffer[buf->length] = '\0';
+  buf->length += 1; 
 }
 
 void jq_compat_buf_append(string_buffer *buf, const char *s){
-  if(buf->length > 0){
-    buf->buffer[buf->length-1] = '\n';
-  }
   size_t l = strlen(s);
-  jq_compat_buf_ensure_extra_capacity(buf, l + 1);
+  if(!l){
+    return;
+  }
+  jq_compat_buf_ensure_extra_capacity(buf, l);
   char *write_start = buf->buffer + buf->length;
   memcpy(write_start, s, l);
-  buf->length += (l + 1);
-  buf->buffer[buf->length - 1] = '\0';
+  buf->length += l;
 }
 
 void jq_compat_buf_set(string_buffer *buf, const char *s){
@@ -58,32 +65,33 @@ void jq_compat_buf_set(string_buffer *buf, const char *s){
 
 typedef struct {
   jq_state *state;
+  struct jv_parser *parser;
   string_buffer *error;
-  string_buffer *input;
   string_buffer *output;
 } jq_compat;
 
 void jq_compat_err_cb(void *c, jv v){
   jq_compat *compat = (jq_compat*)c;
   jq_compat_buf_append(compat->error, jv_string_value(v));
+  jq_compat_buf_append(compat->error, "\n");
 }
 
 jq_compat *jq_compat_new(){
   jq_compat *compat = malloc(sizeof(jq_compat));
   compat->state = jq_init();
   compat->error = jq_compat_buf_new();
-  compat->input = jq_compat_buf_new();
+  compat->parser = jv_parser_new(0);
   compat->output = jq_compat_buf_new();
   jq_set_error_cb(compat->state, jq_compat_err_cb, compat);
   return compat;
 }
 
-void jq_compat_del(jq_compat *x){
-  jq_teardown(&x->state);
-  jq_compat_buf_del(x->error);
-  jq_compat_buf_del(x->input);
-  jq_compat_buf_del(x->output);
-  free(x);
+void jq_compat_del(jq_compat *compat){
+  jq_teardown(&compat->state);
+  jq_compat_buf_del(compat->error);
+  jq_compat_buf_del(compat->output);
+  jv_parser_free(compat->parser);
+  free(compat);
 }
 
 int jq_compat_compile(jq_compat *compat, char *program){
@@ -99,37 +107,27 @@ char *jq_compat_current_error(jq_compat *compat){
   }
 }
 
-void jq_compat_stage_data(jq_compat *compat, char *data){
-  jq_compat_buf_append(compat->input, data);
-}
-
-void jq_compat_process_input(jq_compat *compat){
-  if(!compat->input->length){
-    return;
-  }
-  struct jv_parser* parser = jv_parser_new(0);
-  jv_parser_set_buf(parser, compat->input->buffer, compat->input->length, 0);
-
+void jq_compat_write(jq_compat *compat, size_t n, char *data){
+  jv_parser_set_buf(compat->parser, data, n, 0);
   jv value;
-  while (1){
-    value = jv_parser_next(parser);
-    if(!jv_is_valid(value)){
-      break;
-    }
+  while (jv_is_valid((value = jv_parser_next(compat->parser)))){
     jq_start(compat->state, value, 0);
+    jv result;
+    while (jv_is_valid(result = jq_next(compat->state))){
+      jv result_s = jv_dump_string(result, 0);
+      jq_compat_buf_append(compat->output, jv_string_value(result_s));
+      jq_compat_buf_append(compat->output, "\n");
+      jv_free(result_s);
+      jv_free(result);
+    }
   }
-  jv_parser_free(parser);
-  jq_compat_buf_reset(compat->input);
 }
 
-char *jq_compat_value_next(jq_compat *compat){
-  jv val = jq_next(compat->state);
-  if(!jv_is_valid(val)){
+char *jq_compat_read(jq_compat *compat){
+  if(!compat->output->length){
     return NULL;
   }
-  jv vals = jv_dump_string(val, 0);
-  jq_compat_buf_set(compat->output, jv_string_value(vals));
-  jv_free(val);
-  jv_free(vals);
+  jq_compat_buf_terminate(compat->output);
+  jq_compat_buf_reset(compat->output);
   return compat->output->buffer;
 }

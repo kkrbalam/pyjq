@@ -2,6 +2,7 @@ import ctypes
 import ctypes.util
 import os
 import json
+from pyjq.rotatingbuffer import RotatingBuffer
 
 
 class JQCompat(ctypes.Structure):
@@ -25,7 +26,7 @@ class JQ(object):
     lib.jq_compat_new.restype = ctypes.POINTER(JQCompat)
     lib.jq_compat_compile.restype = int
     lib.jq_compat_current_error.restype = ctypes.c_char_p
-    lib.jq_compat_value_next.restype = ctypes.c_char_p
+    lib.jq_compat_read.restype = ctypes.c_char_p
 
     def __init__(self):
         self.compat = self.lib.jq_compat_new()
@@ -41,18 +42,16 @@ class JQ(object):
 
     def write(self, value):
         json_data = json.dumps(value)
-        self.lib.jq_compat_stage_data(self.compat, ctypes.c_char_p(json_data))
+        self.lib.jq_compat_write(
+            self.compat,
+            len(json_data),
+            ctypes.c_char_p(json_data)
+        )
 
-    def flush(self):
-        self.lib.jq_compat_process_input(self.compat, 1)
-
-    def next(self):
-        self.lib.jq_compat_process_input(self.compat, 0)
-        val = self.lib.jq_compat_value_next(self.compat)
-        if val:
-            return json.loads(str(val))
-        else:
-            raise StopIteration()
+    def __iter__(self):
+        data = str(self.lib.jq_compat_read(self.compat))
+        for line in data.split("\n")[:-1]:
+            yield json.loads(line)
 
     def __check_error(self, exc=JQError):
         current_error = self.lib.jq_compat_current_error(self.compat)

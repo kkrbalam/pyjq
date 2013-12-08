@@ -3,7 +3,6 @@ import os
 import json
 import sys
 from select import select
-import inspect
 
 
 class ParseError(Exception):

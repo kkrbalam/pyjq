@@ -20,8 +20,23 @@ def test_can_pass_data_through():
     jq = JQ()
     jq.compile(".")
     jq.write(1)
-    assert next(jq) == 1
+    assert list(jq) == [1]
     jq.write(2)
-    assert next(jq) == 2
-    with pytest.raises(StopIteration):
-        next(jq)
+    assert list(jq) == [2]
+    assert list(jq) == []
+
+
+def test_can_pass_multiple_values_through():
+    jq = JQ()
+    jq.compile(".")
+    jq.write(1)
+    jq.write(1)
+    assert list(jq) == [1, 1]
+
+
+def test_can_select_fields():
+    jq = JQ()
+    jq.compile(".foo")
+    r = range(10) + ["foo", "bar"]
+    for v in r:
+        jq.write({"foo": v})
