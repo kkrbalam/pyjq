@@ -95,3 +95,14 @@ def test_multiple_jq_are_independent():
     jq3.write({"foo": 10})
     assert list(jq2) == ["foo", 1]
     assert list(jq3) == [10]
+
+
+def test_can_resume_iteration():
+    jq = JQ()
+    jq.compile(".[]")
+    jq.write([1, 2, 3, 4])
+    for i in jq:
+        assert i == 1
+        break
+    jq.write([5, 6])
+    assert list(jq) == [2, 3, 4, 5, 6]

@@ -6,6 +6,7 @@ import json
 from contextlib import contextmanager
 import functools
 import threading
+from pyjq.rotatingbuffer import RotatingBuffer
 
 
 class JQError(Exception):
@@ -117,6 +118,7 @@ class JQ(object):
         self.compat = None
         self.recorder = recorder.current
         self.compat = self._invoke("jq_compat_new")
+        self.pending_objects = RotatingBuffer()
         if self.recorder:
             self.recorder.record_new(self.compat)
 
@@ -141,9 +143,10 @@ class JQ(object):
             )
 
     def __iter__(self):
-        data = str(self.invoke("read_output"))
-        for line in data.splitlines():
-            yield json.loads(line)
+        data = map(json.loads, str(self.invoke("read_output")).splitlines())
+        for o in data:
+            self.pending_objects.push(o)
+        return self.pending_objects
 
     def invoke(self, name, *args):
         args = ((self.compat,) + args)
