@@ -29,35 +29,42 @@ class JQ(object):
     lib.jq_compat_read_output.restype = ctypes.c_char_p
 
     def __init__(self):
-        self.compat = self.lib.jq_compat_new()
+        self.compat = self._invoke("new")
 
     def __del__(self):
-        self.lib.jq_compat_del(self.compat)
+        self.invoke("del")
 
     def compile(self, program):
         with self.__check_error(JQParseError):
-            self.lib.jq_compat_compile(self.compat, ctypes.c_char_p(program))
+            self.invoke("compile", ctypes.c_char_p(program))
 
     def write(self, value):
         self.write_string(json.dumps(value))
 
     def write_string(self, s):
         with self.__check_error():
-            self.lib.jq_compat_write(
-                self.compat,
+            self.invoke(
+                "write",
                 len(s),
                 ctypes.c_char_p(s)
             )
 
     def __iter__(self):
-        data = str(self.lib.jq_compat_read_output(self.compat))
+        data = str(self.invoke("read_output"))
         for line in data.splitlines():
             yield json.loads(line)
 
+    def invoke(self, name, *args):
+        return self._invoke(name, *((self.compat,) + args))
+
+    def _invoke(self, name, *args):
+        name = "jq_compat_" + name
+        return getattr(self.lib, name)(*args)
+
     @contextmanager
     def __check_error(self, exc=JQError):
-        self.lib.jq_compat_clear_error(self.compat)
+        self.invoke("clear_error")
         yield
         if self.lib.jq_compat_had_error(self.compat):
-            current_error = str(self.lib.jq_compat_read_error(self.compat))
+            current_error = str(self.invoke("read_error"))
             raise exc(str(current_error))
