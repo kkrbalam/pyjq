@@ -10,11 +10,10 @@ test_recorder = Recorder(os.path.join(
 
 
 def setup_module(module):
-    print "setup_module"
+    pass
 
 
 def teardown_module(module):
-    print "teardown_module"
     test_recorder.write_main_and_exit()
 
 
