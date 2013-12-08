@@ -13,7 +13,7 @@ void test_field_access(){
         jq_compat_write(jqc, ll, line);
     }
 
-    char *result = jq_compat_read(jqc);
+    const char *result = jq_compat_read_output(jqc);
     assert(result != NULL);
     // n '1's and n '\n's
     assert(strlen(result) == n * 2);
@@ -45,7 +45,7 @@ void test_pass_data_through(){
             jq_compat_write(jqc, ll, line);
         }
 
-        char *result = jq_compat_read(jqc);
+        const char *result = jq_compat_read_output(jqc);
         assert(result != NULL);
         // n '1's and n '\n's
         assert(strlen(result) == n * 2);

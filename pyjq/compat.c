@@ -78,7 +78,9 @@ void jq_compat_write(jq_compat *compat, size_t n, char *data){
       jv_free(result_s);
       jv_free(result);
     }
+    jv_free(result);
   }
+  jv_free(value);
 }
 
 const char *jq_compat_read_error(jq_compat *compat){
