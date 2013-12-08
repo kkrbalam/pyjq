@@ -2,7 +2,6 @@ import ctypes
 import ctypes.util
 import os
 import json
-from pyjq.rotatingbuffer import RotatingBuffer
 
 
 class JQCompat(ctypes.Structure):
@@ -25,8 +24,8 @@ class JQ(object):
 
     lib.jq_compat_new.restype = ctypes.POINTER(JQCompat)
     lib.jq_compat_compile.restype = int
-    lib.jq_compat_current_error.restype = ctypes.c_char_p
-    lib.jq_compat_read.restype = ctypes.c_char_p
+    lib.jq_compat_read_error.restype = ctypes.c_char_p
+    lib.jq_compat_read_output.restype = ctypes.c_char_p
 
     def __init__(self):
         self.compat = self.lib.jq_compat_new()
@@ -49,11 +48,11 @@ class JQ(object):
         )
 
     def __iter__(self):
-        data = str(self.lib.jq_compat_read(self.compat))
-        for line in data.split("\n")[:-1]:
+        data = str(self.lib.jq_compat_read_output(self.compat))
+        for line in data.splitlines():
             yield json.loads(line)
 
     def __check_error(self, exc=JQError):
-        current_error = self.lib.jq_compat_current_error(self.compat)
+        current_error = str(self.lib.jq_compat_read_error(self.compat))
         if current_error:
             raise exc(str(current_error))
