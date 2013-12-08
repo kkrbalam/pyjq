@@ -54,8 +54,29 @@ void test_pass_data_through(){
     jq_compat_del(jqc); 
 }
 
+void test_memory_corruption(){
+  // This replicates a case which caused memory corruption with a double free bug
+  jq_compat *jqc = jq_compat_new();
+  jq_compat_clear_error(jqc);
+  jq_compat_compile(jqc, ".foo");
+  jq_compat_write(jqc, 10, "{\"foo\": 0}");
+  jq_compat_write(jqc, 10, "{\"foo\": 1}");
+  jq_compat_write(jqc, 10, "{\"foo\": 2}");
+  jq_compat_write(jqc, 10, "{\"foo\": 3}");
+  jq_compat_write(jqc, 10, "{\"foo\": 4}");
+  jq_compat_write(jqc, 10, "{\"foo\": 5}");
+  jq_compat_write(jqc, 10, "{\"foo\": 6}");
+  jq_compat_write(jqc, 10, "{\"foo\": 7}");
+  jq_compat_write(jqc, 10, "{\"foo\": 8}");
+  jq_compat_write(jqc, 10, "{\"foo\": 9}");
+  jq_compat_write(jqc, 14, "{\"foo\": \"foo\"}");
+  jq_compat_write(jqc, 14, "{\"foo\": \"bar\"}");
+}
+
+
 int main(){
-    test_field_access();
-    test_del_before_read();
-    test_pass_data_through();
+  test_memory_corruption();
+  test_field_access();
+  test_del_before_read();
+  test_pass_data_through();
 }

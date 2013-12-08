@@ -71,7 +71,7 @@ void jq_compat_write(jq_compat *compat, size_t n, char *data){
       vpool_append(&compat->output, jv_string_value(result_s));
       vpool_append(&compat->output, "\n");
       jv_free(result_s);
-      jv_free(result);
+      // don't need to jv_free result because _dump_string decreffed it 
     }
     jv_free(result);
   }
