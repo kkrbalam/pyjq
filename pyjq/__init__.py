@@ -6,10 +6,8 @@ class Filter(object):
         assert isinstance(text, basestring)
         if isinstance(text, unicode):
             text = text.encode('utf8')
-
-        self.jq = JQ()
+        JQ().compile(text)
         self.text = text
-        self.jq.compile(self.text)
 
     def compose(self, other):
         if isinstance(other, basestring):
@@ -21,9 +19,11 @@ class Filter(object):
     __or__ = compose
 
     def run(self, stream):
+        jq = JQ()
+        jq.compile(self.text)
         for item in stream:
-            self.jq.write(item)
-            for result in self.jq:
+            jq.write(item)
+            for result in jq:
                 yield result
 
     __call__ = run
