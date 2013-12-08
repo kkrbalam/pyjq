@@ -13,3 +13,8 @@ def test_selects_fields():
 def test_compose_filters():
     composed = jq(".foo") | ".[]"
     assert list(composed([{"foo": [1, 2, 3]}])) == [1, 2, 3]
+
+
+def test_explode_list():
+    xs = range(10)
+    assert list(jq(".[]")([xs])) == xs
