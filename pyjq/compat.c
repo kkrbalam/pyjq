@@ -5,6 +5,20 @@
 #include <assert.h>
 #include <pyjq/vpool.h>
 
+// Compatibility layer for jq
+// Defines a type jq_compat which essentially emulates the loop of jq's main
+// function. You can write to it and ask it to compile code, which may cause 
+// it to write to buffers it maintains for error and output. These can then be
+// read as strings.
+
+typedef struct {
+  jq_state *state;
+  int had_error;
+  struct jv_parser *parser;
+  struct vpool error;
+  struct vpool output;
+} jq_compat;
+
 // Appends string to the end of a vpool. Does not zero terminate the result
 void vpool_append(struct vpool *pool, const char *s){
   vpool_insert(pool, VPOOL_TAIL, s, strlen(s));
@@ -20,14 +34,6 @@ char *vpool_read(struct vpool *pool){
   vpool_wipe(pool);
   return vpool_get_buf(pool);
 }
-
-typedef struct {
-  jq_state *state;
-  int had_error;
-  struct jv_parser *parser;
-  struct vpool error;
-  struct vpool output;
-} jq_compat;
 
 void jq_compat_err_cb(void *c, jv v){
   jq_compat *compat = (jq_compat*)c;
