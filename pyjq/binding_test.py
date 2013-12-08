@@ -72,6 +72,15 @@ def test_raises_on_bad_json():
 
 
 @test_recorder.capture
+def test_errors_on_incompatible_data_type():
+    jq = JQ()
+    jq.compile(".foo")
+    with pytest.raises(JQError) as excinfo:
+        jq.write(1)
+    assert "Cannot index number with string" in excinfo.exconly()
+
+
+@test_recorder.capture
 def test_multiple_jq_are_independent():
     jq1 = JQ()
     jq2 = JQ()
