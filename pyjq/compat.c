@@ -53,11 +53,7 @@ void jq_compat_del(jq_compat *compat){
 }
 
 void jq_compat_clear_error(jq_compat *compat){
-
-}
-
-void jq_compat_clear_output(jq_compat *compat){
-
+  vpool_wipe(&compat->error);
 }
 
 int jq_compat_compile(jq_compat *compat, char *program){
