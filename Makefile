@@ -14,4 +14,4 @@ clean:
 	rm -f pyjq/compat.so
 
 test: pyjq/compat.so
-	py.test pyjq/ --verbose
+	py.test pyjq/ --verbose --capture=no --tb=native

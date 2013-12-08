@@ -1,5 +1,5 @@
 import pytest
-from pyjq.binding import JQ, JQParseError
+from pyjq.binding import JQ, JQParseError, JQError
 
 
 def test_can_allocate():
@@ -40,3 +40,10 @@ def test_can_select_fields():
     r = range(10) + ["foo", "bar"]
     for v in r:
         jq.write({"foo": v})
+
+
+def test_raises_on_bad_json():
+    jq = JQ()
+    jq.compile(".")
+    with pytest.raises(JQError):
+        jq.write_string("{11., ]")

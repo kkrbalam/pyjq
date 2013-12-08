@@ -23,6 +23,7 @@ char *vpool_read(struct vpool *pool){
 
 typedef struct {
   jq_state *state;
+  int had_error;
   struct jv_parser *parser;
   struct vpool error;
   struct vpool output;
@@ -30,6 +31,7 @@ typedef struct {
 
 void jq_compat_err_cb(void *c, jv v){
   jq_compat *compat = (jq_compat*)c;
+  compat->had_error = 1;
   vpool_append(&compat->error, jv_string_value(v));
   vpool_append(&compat->error, "\n");
 }
@@ -39,6 +41,7 @@ jq_compat *jq_compat_new(){
   compat->state = jq_init();
   vpool_init(&compat->error, 1024, 0);  
   vpool_init(&compat->output, 1024, 0);  
+  compat->had_error = 0;
   compat->parser = jv_parser_new(0);
   jq_set_error_cb(compat->state, jq_compat_err_cb, compat);
   return compat;
@@ -53,7 +56,12 @@ void jq_compat_del(jq_compat *compat){
 }
 
 void jq_compat_clear_error(jq_compat *compat){
+  compat->had_error = 0;
   vpool_wipe(&compat->error);
+}
+
+int jq_compat_had_error(jq_compat *compat){
+  return compat->had_error;
 }
 
 int jq_compat_compile(jq_compat *compat, char *program){
@@ -75,7 +83,13 @@ void jq_compat_write(jq_compat *compat, size_t n, char *data){
     }
     jv_free(result);
   }
-  jv_free(value);
+  if(jv_invalid_has_msg(jv_copy(value))) {
+    jv msg = jv_invalid_get_msg(value);
+    jq_compat_err_cb(compat, msg);
+    jv_free(msg);
+  } else {
+    jv_free(value);
+  }
 }
 
 const char *jq_compat_read_error(jq_compat *compat){
