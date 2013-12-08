@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+// Note: This file is slightly patched as part of http://github.com/DRMacIver/pyjq
+
 #include <sys/types.h>
 
 #include <errno.h>

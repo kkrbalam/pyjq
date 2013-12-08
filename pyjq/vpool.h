@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+// Note: This file is slightly patched as part of http://github.com/DRMacIver/pyjq
+
 /*
  * VPool: implementation of pool of data with a variable size.
  */
