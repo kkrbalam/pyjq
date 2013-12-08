@@ -48,7 +48,7 @@ void	vpool_reset(struct vpool *pool);
 void	vpool_wipe(struct vpool *pool);
 
 void *	vpool_insert(struct vpool *pool,
-	    size_t where, void *data, size_t datsize);
+	    size_t where, const void *data, size_t datsize);
 void *	vpool_expand(struct vpool *pool, size_t where, size_t size);
 
 int	vpool_truncate(struct vpool *pool,

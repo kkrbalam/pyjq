@@ -130,7 +130,7 @@ vpool_wipe(struct vpool *pool)
 }
 
 void *
-vpool_insert(struct vpool *pool, size_t where, void *data, size_t datsize)
+vpool_insert(struct vpool *pool, size_t where, const void *data, size_t datsize)
 {
 	char *ret;
 	int error;
