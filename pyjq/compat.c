@@ -57,7 +57,6 @@ void jq_compat_clear_error(jq_compat *compat){
 }
 
 int jq_compat_compile(jq_compat *compat, char *program){
-  jq_compat_clear_error(compat);
   return jq_compile(compat->state, program);
 }
 

@@ -34,6 +34,7 @@ class JQ(object):
         self.lib.jq_compat_del(self.compat)
 
     def compile(self, program):
+        self.lib.jq_compat_clear_error(self.compat)
         buff = ctypes.create_string_buffer(program)
         compiled = self.lib.jq_compat_compile(self.compat, buff)
         if not compiled:
