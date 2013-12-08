@@ -26,8 +26,8 @@
 #include <limits.h>
 
 struct vpool {
-	void	*v_basebuf;	/* pointer returned by (re|m)alloc() */
-	void	*v_buf;		/* actual data starts here */
+	char *v_basebuf;	/* pointer returned by (re|m)alloc() */
+	char *v_buf;		/* actual data starts here */
 	size_t	v_off;
 	size_t	v_size;
 
@@ -47,9 +47,9 @@ void	vpool_final(struct vpool *pool);
 void	vpool_reset(struct vpool *pool);
 void	vpool_wipe(struct vpool *pool);
 
-void *	vpool_insert(struct vpool *pool,
-	    size_t where, const void *data, size_t datsize);
-void *	vpool_expand(struct vpool *pool, size_t where, size_t size);
+char*	vpool_insert(struct vpool *pool,
+	    size_t where, const char *data, size_t datsize);
+char *	vpool_expand(struct vpool *pool, size_t where, size_t size);
 
 int	vpool_truncate(struct vpool *pool,
 	    size_t where, size_t size, enum vpool_trunc how);
@@ -59,7 +59,7 @@ int	vpool_truncate(struct vpool *pool,
 #define vpool_get_length(pool)		((pool)->v_off)
 #define vpool_get_error(pool)		((pool)->v_lasterr)
 
-void	vpool_export(struct vpool *pool, void **buf, size_t *size);
+void	vpool_export(struct vpool *pool, char **buf, size_t *size);
 
 __END_DECLS
 

@@ -20,7 +20,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdint.h>
 #include "vpool.h"
 
 static void	vpool_shift(struct vpool *pool);
@@ -129,8 +129,8 @@ vpool_wipe(struct vpool *pool)
 	pool->v_lasterr = 0;
 }
 
-void *
-vpool_insert(struct vpool *pool, size_t where, const void *data, size_t datsize)
+char *
+vpool_insert(struct vpool *pool, size_t where, const char *data, size_t datsize)
 {
 	char *ret;
 	int error;
@@ -158,7 +158,7 @@ vpool_insert(struct vpool *pool, size_t where, const void *data, size_t datsize)
 	return (ret);
 }
 
-void *
+char *
 vpool_expand(struct vpool *pool, size_t where, size_t size)
 {
 	char *ret;
@@ -203,7 +203,7 @@ vpool_truncate(struct vpool *pool,
 			 * Optimization.
 			 * Don't move data, just adjust pointer.
 			 */
-			(char *)pool->v_buf += size;
+			pool->v_buf += size;
 		} else {
 			memmove((char *)pool->v_buf + where,
 			    (char *)pool->v_buf + where + size,
@@ -220,7 +220,7 @@ vpool_truncate(struct vpool *pool,
 }
 
 void
-vpool_export(struct vpool *pool, void **buf, size_t *size)
+vpool_export(struct vpool *pool, char **buf, size_t *size)
 {
 	vpool_shift(pool);
 	*buf = pool->v_buf;
