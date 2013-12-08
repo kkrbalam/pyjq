@@ -14,4 +14,4 @@ clean:
 	rm -f pyjq/compat.so
 
 test: pyjq/compat.so
-	py.test pyjq/binding_test.py --verbose --capture=no
+	py.test pyjq/ --verbose

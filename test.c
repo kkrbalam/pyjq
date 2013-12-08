@@ -1,7 +1,7 @@
 #include "pyjq/compat.c"
 
-void jqcw(jq_compat *jqc, char *s){
-}
+// C program that replicates a lot of the behaviour of the bindings
+// This is mostly to be run under valgrind to check for bad behaviour
 
 void test_field_access(){
     jq_compat *jqc = jq_compat_new();
@@ -71,6 +71,7 @@ void test_memory_corruption(){
   jq_compat_write(jqc, 10, "{\"foo\": 9}");
   jq_compat_write(jqc, 14, "{\"foo\": \"foo\"}");
   jq_compat_write(jqc, 14, "{\"foo\": \"bar\"}");
+  jq_compat_del(jqc);
 }
 
 
